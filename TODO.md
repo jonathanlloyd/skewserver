@@ -1,5 +1,5 @@
 # TODO
- - Launch goroutines based on incoming TCP connections
+ - Launch goroutines based on incoming TCP connections (DONE)
  - Parse and dispatch STOMP frames
  - Implement server commands:
      - SEND
