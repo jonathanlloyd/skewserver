@@ -1,0 +1,15 @@
+# TODO
+ - Launch goroutines based on incoming TCP connections
+ - Parse and dispatch STOMP frames
+ - Implement server commands:
+     - SEND
+     - SUBSCRIBE
+     - UNSUBSCRIBE
+     - BEGIN
+     - COMMIT
+     - ABORT
+     - ACK
+     - NACK
+     - DISCONNECT
+     - CONNECT
+     - STOMP
