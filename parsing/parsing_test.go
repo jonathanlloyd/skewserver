@@ -99,6 +99,36 @@ func TestSingleFrameWithBodyWithHeaders(t *testing.T) {
 	}
 }
 
+// Trailing EOLs
+func TestTrailingEOLs(t *testing.T) {
+	testData := "MESSAGE\nx-custom-header:some value\n\nmessage body\x00\n\n\nMESSAGE\nx-custom-header:some value\n\nmessage body\x00"
+
+	conn := mockTCPStream{streamData: testData}
+	parser := parsing.NewStompParserFromReader(&conn)
+	frame, err := parser.NextFrame()
+	frame, err = parser.NextFrame()
+
+	if err != nil {
+		t.Errorf("No error should be raised")
+	}
+
+	if frame.Command != parsing.MESSAGE {
+		t.Errorf("Frame type should have type CONNECT")
+	}
+
+	expectedHeaders := map[string]string{
+		"x-custom-header": "some value",
+	}
+	if !reflect.DeepEqual(expectedHeaders, frame.Headers) {
+		t.Errorf("Frame should have correct headers")
+	}
+
+	expectedBody := []byte("message body")
+	if !bytes.Equal(expectedBody, frame.Body) {
+		t.Errorf("Frame should have correct body")
+	}
+}
+
 // Multiple frames
 func TestMultipleFrames(t *testing.T) {
 	testData := "CONNECT\naccept-version:1.2\n\n\x00CONNECTED\r\nversion:1.2\n\n\x00"

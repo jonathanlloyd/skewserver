@@ -19,8 +19,9 @@ func (e ParseError) Error() string {
 // Parses STOMP message frames from a bufio.Reader
 
 type StompParser struct {
-	stream     ReadPeeker
-	reachedEOF bool
+	stream         ReadPeeker
+	reachedEOF     bool
+	frameJustEnded bool
 }
 
 func NewStompParserFromReader(reader io.Reader) (parser StompParser) {
@@ -156,28 +157,33 @@ type ReadPeeker interface {
 //  - (HEADER_STR): = HEADER_KEY
 //  - (.*) = INVALID_TOKEN
 func (parser *StompParser) nextToken() (tokType TokenType, tokLiteral []byte) {
-	startsWithEOL := parser.scanEOL()
+	var terminator TerminatorType
+
+	if parser.frameJustEnded {
+		parser.skipEOLs()
+		parser.frameJustEnded = false
+	}
+
 	peekBytes, err := parser.stream.Peek(1)
 	if err != nil {
 		parser.reachedEOF = true
 		return NULL_TOKEN, []byte{}
 	}
 	currentByte := peekBytes[0]
-	var terminator TerminatorType
 
 	switch {
-	case startsWithEOL:
-		tokType = BODY
-		tokLiteral = parser.scanTillDelimiter()
 	case currentByte == '\x00':
 		tokType = DELIMITER
 		tokLiteral = []byte{currentByte}
 		parser.stream.ReadByte()
-		for {
-			foundEOL := parser.scanEOL()
-			if !foundEOL {
-				break
-			}
+		parser.frameJustEnded = true
+	case currentByte == '\r' || currentByte == '\n':
+		foundEOL := parser.scanEOL()
+		if foundEOL {
+			tokType = BODY
+			tokLiteral = parser.scanTillDelimiter()
+		} else {
+			tokType = INVALID_TOKEN
 		}
 	case currentByte == ':':
 		parser.stream.ReadByte()
@@ -200,6 +206,14 @@ func (parser *StompParser) nextToken() (tokType TokenType, tokLiteral []byte) {
 	}
 
 	return tokType, tokLiteral
+}
+
+func (parser *StompParser) skipEOLs() {
+	for {
+		if !parser.scanEOL() {
+			break
+		}
+	}
 }
 
 func (parser *StompParser) scanEOL() (found bool) {
@@ -249,6 +263,7 @@ func (parser *StompParser) scanTillDelimiter() (literal []byte) {
 		} else {
 			currentByte, err := parser.stream.ReadByte()
 			if err != nil {
+				parser.reachedEOF = true
 				break
 			}
 			literal = append(literal, currentByte)
