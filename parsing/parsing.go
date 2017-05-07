@@ -127,20 +127,20 @@ func (parser *StompParser) NextFrame() (parsedFrame Frame, err error) {
 type TokenType int
 
 const (
-	NULL_TOKEN    TokenType = iota + 1
-	COMMAND       TokenType = iota + 1
-	HEADER_KEY    TokenType = iota + 1
-	HEADER_VALUE  TokenType = iota + 1
-	BODY          TokenType = iota + 1
-	DELIMITER     TokenType = iota + 1
-	INVALID_TOKEN TokenType = iota + 1
+	NULL_TOKEN TokenType = iota + 1
+	COMMAND
+	HEADER_KEY
+	HEADER_VALUE
+	BODY
+	DELIMITER
+	INVALID_TOKEN
 )
 
 type TerminatorType int
 
 const (
-	EOL              TerminatorType = iota + 1
-	HEADER_SEPARATOR TerminatorType = iota + 1
+	EOL TerminatorType = iota + 1
+	HEADER_SEPARATOR
 )
 
 type ReadPeeker interface {
