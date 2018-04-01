@@ -2,10 +2,11 @@ package parsing_test
 
 import (
 	"bytes"
-	"github.com/turingincomplete/skewserver/parsing"
 	"io"
 	"reflect"
 	"testing"
+
+	"github.com/jonathanlloyd/skewserver/parsing"
 )
 
 // We want to simulate the fact that reads can return any number of bytes
